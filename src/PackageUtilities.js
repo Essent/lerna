@@ -285,6 +285,10 @@ export default class PackageUtilities {
       const packageActions = filteredDependencyNames.reduce((actions, dependencyName) => {
         // get Package of dependency
         const dependencyPackage = packageGraph.get(dependencyName).package;
+        const dependencyPublishLocation = path.join(
+          dependencyPackage.location, 
+          dependencyPackage.npmDistDirectory
+        );
         const depencyPath = path.join(iteratedPackage.nodeModulesLocation, dependencyPackage.name);
 
         // check if dependency is already installed
@@ -292,7 +296,7 @@ export default class PackageUtilities {
           const isDepSymlink = FileSystemUtilities.isSymlink(depencyPath);
 
           // installed dependency is a symlink pointing to a different location
-          if (isDepSymlink !== false && isDepSymlink !== dependencyPackage.location) {
+          if (isDepSymlink !== false && isDepSymlink !== dependencyPublishLocation) {
             tracker.warn(
               "EREPLACE_OTHER",
               `Symlink already exists for ${dependencyName} dependency of ${iteratedPackage.name}, ` +
@@ -318,7 +322,7 @@ export default class PackageUtilities {
         // create package symlink
         actions.push((cb) => {
           FileSystemUtilities.symlink(
-            dependencyPackage.location, depencyPath, "junction", cb
+            dependencyPublishLocation, depencyPath, "junction", cb
           );
         });
 

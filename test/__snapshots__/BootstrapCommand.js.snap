@@ -79,6 +79,65 @@ Array [
 ]
 `;
 
+exports[`BootstrapCommand with hoisting should use global style to install disallowed external dependencies 1`] = `
+Object {
+  "": Array [
+    "foo@^1.0.0",
+    "@test/package-1@^0.0.0",
+  ],
+  "packages/package-3": Array [
+    "foo@0.1.12",
+  ],
+}
+`;
+
+exports[`BootstrapCommand with hoisting should use global style to install disallowed external dependencies 2`] = `
+Array [
+  "packages/package-1/node_modules/foo",
+  "packages/package-2/node_modules/foo",
+  "packages/package-4/node_modules/@test/package-1",
+]
+`;
+
+exports[`BootstrapCommand with local package dependencies publishing from separated npm dist directory should bootstrap packages 1`] = `
+Object {
+  "packages/package-1": Array [
+    "foo@^1.0.0",
+  ],
+  "packages/package-2": Array [
+    "foo@^1.0.0",
+  ],
+}
+`;
+
+exports[`BootstrapCommand with local package dependencies publishing from separated npm dist directory should bootstrap packages 2`] = `
+Array [
+  Object {
+    "_src": "packages/package-1/dist",
+    "dest": "packages/package-2/node_modules/@test/package-1",
+    "type": "junction",
+  },
+  Object {
+    "_src": "packages/package-1/dist/cli.js",
+    "dest": "packages/package-2/node_modules/.bin/package-1",
+    "type": "exec",
+  },
+]
+`;
+
+exports[`BootstrapCommand with local package dependencies publishing from separated npm dist directory should ignore dependencies without a package.json file 1`] = `
+Object {
+  "packages/package-3": Array [
+    "foo@0.1.12",
+  ],
+  "packages/package-4": Array [
+    "foo@0.1.12",
+  ],
+}
+`;
+
+exports[`BootstrapCommand with local package dependencies publishing from separated npm dist directory should ignore dependencies without a package.json file 2`] = `Array []`;
+
 exports[`BootstrapCommand with local package dependencies should bootstrap packages 1`] = `
 Object {
   "packages/package-1": Array [

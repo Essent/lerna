@@ -1,0 +1,10 @@
+{
+  "name": "@test/package-3",
+  "version": "1.0.0",
+  "config": {
+    "npmDistDirectory" : "dist"
+  },
+  "devDependencies": {
+    "foo": "0.1.12"
+  }
+}

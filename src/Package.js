@@ -21,6 +21,11 @@ export default class Package {
     return this._location;
   }
 
+  get npmDistDirectory() {
+    const { npmDistDirectory } = this._package.config || {};
+    return npmDistDirectory || "";
+  }
+
   get nodeModulesLocation() {
     return path.join(this._location, "node_modules");
   }

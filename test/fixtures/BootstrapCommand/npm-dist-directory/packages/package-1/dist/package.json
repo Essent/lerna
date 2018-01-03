@@ -1,0 +1,11 @@
+{
+  "name": "@test/package-1",
+  "version": "1.0.0",
+  "bin": "cli.js",
+  "dependencies": {
+    "foo": "^1.0.0"
+  },
+  "config": {
+    "npmDistDirectory" : "dist"
+  }
+}

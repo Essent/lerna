@@ -213,6 +213,31 @@ describe("BootstrapCommand", () => {
     });
   });
 
+  describe("with local package dependencies publishing from separated npm dist directory", () => {
+    let testDir;
+    let lernaBootstrap;
+
+    beforeEach(async () => {
+      testDir = await initFixture("BootstrapCommand/npm-dist-directory");
+      lernaBootstrap = run(testDir);
+    });
+
+    beforeEach(stubSymlink);
+    afterEach(resetSymlink);
+
+    it("should bootstrap packages", async () => {
+      await lernaBootstrap("--scope", "@test/package-@(1|2)");
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+      expect(symlinkedDirectories(testDir)).toMatchSnapshot();
+    });
+
+    it("should ignore dependencies without a package.json file", async () => {
+      await lernaBootstrap("--scope", "@test/package-@(3|4)");
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+      expect(symlinkedDirectories(testDir)).toMatchSnapshot();
+    });
+  });
+
   describe("with multiple package locations", () => {
     let testDir;
     let lernaBootstrap;
