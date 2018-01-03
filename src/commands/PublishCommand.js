@@ -217,6 +217,20 @@ export default class PublishCommand extends Command {
       .map((update) => update.package)
       .filter((pkg) => !pkg.isPrivate());
 
+    this.packagesToPublish.forEach((pkg) => {
+      const publishDirectoryPackage = pkg.getPublishDirectoryPackage();
+      if (publishDirectoryPackage) {
+        if (pkg.name !== publishDirectoryPackage.name || pkg.version !== publishDirectoryPackage.version) {
+          const message = "Package " + pkg.name + " version is " + pkg.name + "@" + pkg.version + " "
+            + "doesn't match version of the custom publish 'package.json' file "
+            + pkg.publishDirectoryPackage.name + " version is " + pkg.publishDirectoryPackage.name
+            + "@" + pkg.version;
+          this.logger.error(message);
+          throw new Error(message);
+        }
+      }
+    });
+
     this.packagesToPublishCount = this.packagesToPublish.length;
     try {
       this.batchedPackagesToPublish = this.toposort
@@ -564,6 +578,28 @@ export default class PublishCommand extends Command {
     });
   }
 
+  updatePackageJson(pkg, exact) {
+    const packageLocation = pkg.location;
+    const packageJsonLocation = path.join(packageLocation, "package.json");
+
+    // set new version
+    pkg.version = this.updatesVersions[pkg.name] || pkg.version;
+
+    // update pkg dependencies
+    this.updatePackageDepsObject(pkg, "dependencies", exact);
+    this.updatePackageDepsObject(pkg, "devDependencies", exact);
+    this.updatePackageDepsObject(pkg, "peerDependencies", exact);
+
+    // exec preversion script
+    this.runSyncScriptInPackage(pkg, "preversion");
+
+    // write new package
+    writePkg.sync(packageJsonLocation, pkg.toJSON());
+    // NOTE: Object.prototype.toJSON() is normally called when passed to
+    // JSON.stringify(), but write-pkg iterates Object.keys() before serializing
+    // so it has to be explicit here (otherwise it mangles the instance properties)
+  }
+
   updateUpdatedPackages() {
     const { exact, conventionalCommits } = this.options;
     const changedFiles = [];
@@ -573,22 +609,12 @@ export default class PublishCommand extends Command {
       const packageLocation = pkg.location;
       const packageJsonLocation = path.join(packageLocation, "package.json");
 
-      // set new version
-      pkg.version = this.updatesVersions[pkg.name] || pkg.version;
-
-      // update pkg dependencies
-      this.updatePackageDepsObject(pkg, "dependencies", exact);
-      this.updatePackageDepsObject(pkg, "devDependencies", exact);
-      this.updatePackageDepsObject(pkg, "peerDependencies", exact);
-
-      // exec preversion script
-      this.runSyncScriptInPackage(pkg, "preversion");
-
-      // write new package
-      writePkg.sync(packageJsonLocation, pkg.toJSON());
-      // NOTE: Object.prototype.toJSON() is normally called when passed to
-      // JSON.stringify(), but write-pkg iterates Object.keys() before serializing
-      // so it has to be explicit here (otherwise it mangles the instance properties)
+      this.updatePackageJson(pkg, exact);
+      const publishDirectoryPkg = pkg.getPublishDirectoryPackage();
+      if (publishDirectoryPkg) {
+        // update publish package json as well
+        this.updatePackageJson(publishDirectoryPkg, exact);
+      }
 
       // exec version script
       this.runSyncScriptInPackage(pkg, "version");
@@ -715,8 +741,14 @@ export default class PublishCommand extends Command {
 
       const run = (cb) => {
         tracker.verbose("publishing", pkg.name);
+        let publishLocation = pkg.location;
 
-        NpmUtilities.publishTaggedInDir(tag, pkg.location, this.npmRegistry, (err) => {
+        if (pkg.publishDirectoryLocation) {
+          publishLocation = pkg.publishDirectoryLocation;
+          tracker.verbose("publishing from custom directory", publishLocation);
+        }
+
+        NpmUtilities.publishTaggedInDir(tag, publishLocation, this.npmRegistry, (err) => {
           err = err && err.stack || err;
 
           if (!err ||

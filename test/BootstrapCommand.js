@@ -3,6 +3,7 @@ import log from "npmlog";
 // mocked or stubbed modules
 import FileSystemUtilities from "../src/FileSystemUtilities";
 import NpmUtilities from "../src/NpmUtilities";
+import writeJsonFile from "write-json-file";
 
 // helpers
 import callsBack from "./helpers/callsBack";
@@ -16,6 +17,7 @@ import * as commandModule from "../src/commands/BootstrapCommand";
 const run = yargsRunner(commandModule);
 
 jest.mock("../src/NpmUtilities");
+jest.mock("write-json-file");
 
 // silence logs
 log.level = "silent";
@@ -233,6 +235,18 @@ describe("BootstrapCommand", () => {
 
     it("should ignore dependencies without a package.json file", async () => {
       await lernaBootstrap("--scope", "@test/package-@(3|4)");
+      expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
+      expect(symlinkedDirectories(testDir)).toMatchSnapshot();
+    });
+
+    it("should create private package.json in dist if no package.json is found", async () => {
+      await lernaBootstrap("--scope", "@test/package-@(5|6)");
+      expect(writeJsonFile.sync).toBeCalled();
+      expect(writeJsonFile.sync.mock.calls[0][1]).toMatchObject({
+        name: '@test/package-5',
+        version: '1.0.0',
+        private: true
+      });
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
       expect(symlinkedDirectories(testDir)).toMatchSnapshot();
     });

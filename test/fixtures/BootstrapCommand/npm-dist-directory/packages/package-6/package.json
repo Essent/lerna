@@ -1,0 +1,8 @@
+{
+  "name": "@test/package-6",
+  "version": "1.0.0",
+  "devDependencies": {
+    "@test/package-5": "^1.0.0",
+    "foo": "0.1.12"
+  }
+}

@@ -3,7 +3,9 @@ import log from "npmlog";
 import path from "path";
 import semver from "semver";
 import _ from "lodash";
+import readPkg from "read-pkg";
 
+import FileSystemUtilities from "./FileSystemUtilities";
 import dependencyIsSatisfied from "./utils/dependencyIsSatisfied";
 import NpmUtilities from "./NpmUtilities";
 
@@ -21,17 +23,22 @@ export default class Package {
     return this._location;
   }
 
-  get npmDistDirectory() {
-    const { npmDistDirectory } = this._package.config || {};
-    return npmDistDirectory || "";
-  }
-
   get nodeModulesLocation() {
     return path.join(this._location, "node_modules");
   }
 
   get binLocation() {
     return path.join(this.nodeModulesLocation, ".bin");
+  }
+  
+  get publishDirectory() {
+    const config = this._package.config;
+    return config && config["publishDirectory"] ? config["publishDirectory"] : null;
+  }
+
+  get publishDirectoryLocation() {
+    const publishDirectory = this.publishDirectory;
+    return publishDirectory ? path.join(this.location, publishDirectory) : null;
   }
 
   get version() {
@@ -79,7 +86,10 @@ export default class Package {
   }
 
   isPrivate() {
-    return !!this._package.private;
+    // favor custom dist package private mode if exists assuming 'private' is used to determine
+    // if the package can be deployed to NPM.
+    const publishDirectoryPackage = this.getPublishDirectoryPackage();
+    return  publishDirectoryPackage ? !!publishDirectoryPackage.private : !!this._package.private;
   }
 
   toJSON() {
@@ -159,5 +169,38 @@ export default class Package {
     return dependencyIsSatisfied(
       this.nodeModulesLocation, depName, this.allDependencies[depName]
     );
+  }
+
+  getPublishDirectoryPackage(resolver) {
+    if (typeof this._publishDirPackage === "undefined") {
+      if (this.publishDirectoryLocation) {
+        const publishDirLocation = this.publishDirectoryLocation;
+        const publishDirConfigPath = path.join(publishDirLocation, "package.json");
+        let publishDirJson = null;
+
+        log.verbose("package " + this.name + " is configured to publish from custom "
+          + "directory " + publishDirLocation);
+
+        if (!FileSystemUtilities.existsSync(publishDirConfigPath)) {
+          if (resolver) {
+            publishDirJson = resolver(null);
+          }
+        } else {
+          publishDirJson = readPkg.sync(publishDirConfigPath, { normalize: false });
+        }
+
+        if (publishDirJson) {
+          this._publishDirPackage = new Package(publishDirJson, publishDirLocation);
+        }
+        else {
+          const message = "Package " + this.name + " is configured to publish from custom directory " +
+            "which doesn't exists or missing 'package.json'";
+          log.error("EPKGCONFIG", message);
+          throw new Error(message);
+        }
+      }
+    }
+
+    return this._publishDirPackage;
   }
 }

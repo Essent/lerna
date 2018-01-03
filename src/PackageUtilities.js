@@ -5,6 +5,7 @@ import minimatch from "minimatch";
 import {entries} from "lodash";
 import path from "path";
 import readPkg from "read-pkg";
+import writeJsonFile from "write-json-file";
 
 import PackageGraph from "./PackageGraph";
 import FileSystemUtilities from "./FileSystemUtilities";
@@ -46,7 +47,7 @@ export default class PackageUtilities {
 
   static getPackages({
     packageConfigs,
-    rootPath,
+    rootPath
   }) {
     const packages = [];
     const globOpts = {
@@ -284,11 +285,11 @@ export default class PackageUtilities {
       // actions to run for this package
       const packageActions = filteredDependencyNames.reduce((actions, dependencyName) => {
         // get Package of dependency
-        const dependencyPackage = packageGraph.get(dependencyName).package;
-        const dependencyPublishLocation = path.join(
-          dependencyPackage.location, 
-          dependencyPackage.npmDistDirectory
-        );
+        let dependencyPackage = packageGraph.get(dependencyName).package;
+        dependencyPackage = dependencyPackage.getPublishDirectoryPackage(
+          createPrivatePackageJSON(dependencyPackage, tracker)
+        ) || dependencyPackage;
+
         const depencyPath = path.join(iteratedPackage.nodeModulesLocation, dependencyPackage.name);
 
         // check if dependency is already installed
@@ -296,7 +297,7 @@ export default class PackageUtilities {
           const isDepSymlink = FileSystemUtilities.isSymlink(depencyPath);
 
           // installed dependency is a symlink pointing to a different location
-          if (isDepSymlink !== false && isDepSymlink !== dependencyPublishLocation) {
+          if (isDepSymlink !== false && isDepSymlink !== dependencyPackage.location) {
             tracker.warn(
               "EREPLACE_OTHER",
               `Symlink already exists for ${dependencyName} dependency of ${iteratedPackage.name}, ` +
@@ -322,7 +323,7 @@ export default class PackageUtilities {
         // create package symlink
         actions.push((cb) => {
           FileSystemUtilities.symlink(
-            dependencyPublishLocation, depencyPath, "junction", cb
+            dependencyPackage.location, depencyPath, "junction", cb
           );
         });
 
@@ -404,4 +405,23 @@ function resolvePackageRef(pkgRef) {
   return pkgRef instanceof Package
     ? pkgRef
     : new Package(readPkg.sync(pkgRef), pkgRef);
+}
+
+function createPrivatePackageJSON(dependencyPackage, tracker) {
+  return function () {
+    // create minimal package json content for the symlink process
+    const pkgJson = {
+      name: dependencyPackage.name,
+      version: dependencyPackage.version,
+      private: true
+    };
+
+    tracker.info("creating file 'package.json' in publish directory '" +
+      dependencyPackage.publishDirectoryLocation + "' of package '" + dependencyPackage.name);
+    const publishPackageJsonPath = path.join(dependencyPackage.publishDirectoryLocation,
+      "package.json");
+    writeJsonFile.sync(publishPackageJsonPath, pkgJson, { indent: 2 });
+
+    return pkgJson;
+  }
 }

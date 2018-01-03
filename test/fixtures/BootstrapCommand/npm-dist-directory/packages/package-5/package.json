@@ -1,5 +1,5 @@
 {
-  "name": "@test/package-3",
+  "name": "@test/package-5",
   "version": "1.0.0",
   "config": {
     "publishDirectory" : "dist"

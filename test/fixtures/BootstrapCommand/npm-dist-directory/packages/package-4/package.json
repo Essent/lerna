@@ -2,7 +2,7 @@
   "name": "@test/package-4",
   "version": "1.0.0",
   "config": {
-    "npmDistDirectory" : "dist"
+    "publishDirectory" : "dist"
   },
   "devDependencies": {
     "@test/package-3": "^1.0.0",
