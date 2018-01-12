@@ -282,9 +282,10 @@ export default class PackageUtilities {
       const packageActions = filteredDependencyNames.reduce((acc, dependencyName) => {
         // get Package of dependency
         let dependencyPackage = packageGraph.get(dependencyName).package;
-        dependencyPackage = dependencyPackage.getPublishDirectoryPackage(
-          createPrivatePackageJSON(dependencyPackage, tracker)
-        ) || dependencyPackage;
+        dependencyPackage =
+          dependencyPackage.getPublishDirectoryPackage(
+            createPrivatePackageJSON(dependencyPackage, tracker),
+          ) || dependencyPackage;
 
         const depencyPath = path.join(iteratedPackage.nodeModulesLocation, dependencyPackage.name);
 
@@ -402,20 +403,22 @@ function resolvePackageRef(pkgRef) {
 }
 
 function createPrivatePackageJSON(dependencyPackage, tracker) {
-  return function () {
+  return function createPackageJSON() {
     // create minimal package json content for the symlink process
     const pkgJson = {
       name: dependencyPackage.name,
       version: dependencyPackage.version,
-      private: true
+      private: true,
     };
 
-    tracker.info("creating file 'package.json' in publish directory '" +
-      dependencyPackage.publishDirectoryLocation + "' of package '" + dependencyPackage.name);
-    const publishPackageJsonPath = path.join(dependencyPackage.publishDirectoryLocation,
-      "package.json");
+    tracker.info(
+      `creating file 'package.json' in publish directory '${
+        dependencyPackage.publishDirectoryLocation
+      }' of package '${dependencyPackage.name}'`,
+    );
+    const publishPackageJsonPath = path.join(dependencyPackage.publishDirectoryLocation, "package.json");
     writeJsonFile.sync(publishPackageJsonPath, pkgJson, { indent: 2 });
 
     return pkgJson;
-  }
+  };
 }

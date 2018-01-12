@@ -30,14 +30,14 @@ export default class Package {
   get binLocation() {
     return path.join(this.nodeModulesLocation, ".bin");
   }
-  
+
   get publishDirectory() {
-    const config = this._package.config;
-    return config && config["publishDirectory"] ? config["publishDirectory"] : null;
+    const { config } = this._package;
+    return config && config.publishDirectory ? config.publishDirectory : null;
   }
 
   get publishDirectoryLocation() {
-    const publishDirectory = this.publishDirectory;
+    const { publishDirectory } = this;
     return publishDirectory ? path.join(this.location, publishDirectory) : null;
   }
 
@@ -85,7 +85,7 @@ export default class Package {
     // favor custom dist package private mode if exists assuming 'private' is used to determine
     // if the package can be deployed to NPM.
     const publishDirectoryPackage = this.getPublishDirectoryPackage();
-    return  publishDirectoryPackage ? !!publishDirectoryPackage.private : !!this._package.private;
+    return publishDirectoryPackage ? !!publishDirectoryPackage.private : !!this._package.private;
   }
 
   toJSON() {
@@ -191,8 +191,9 @@ export default class Package {
         const publishDirConfigPath = path.join(publishDirLocation, "package.json");
         let publishDirJson = null;
 
-        log.verbose("package " + this.name + " is configured to publish from custom "
-          + "directory " + publishDirLocation);
+        log.verbose(
+          `package ${this.name} is configured to publish from custom directory ${publishDirLocation}`,
+        );
 
         if (!FileSystemUtilities.existsSync(publishDirConfigPath)) {
           if (resolver) {
@@ -204,10 +205,10 @@ export default class Package {
 
         if (publishDirJson) {
           this._publishDirPackage = new Package(publishDirJson, publishDirLocation);
-        }
-        else {
-          const message = "Package " + this.name + " is configured to publish from custom directory " +
-            "which doesn't exists or missing 'package.json'";
+        } else {
+          const message =
+            `Package ${this.name} is configured to publish from custom directory ` +
+            `which doesn't exists or missing 'package.json'`;
           log.error("EPKGCONFIG", message);
           throw new Error(message);
         }

@@ -1,9 +1,9 @@
 import log from "npmlog";
+import writeJsonFile from "write-json-file";
 
 // mocked or stubbed modules
 import FileSystemUtilities from "../src/FileSystemUtilities";
 import NpmUtilities from "../src/NpmUtilities";
-import writeJsonFile from "write-json-file";
 
 // helpers
 import callsBack from "./helpers/callsBack";
@@ -239,9 +239,9 @@ describe("BootstrapCommand", () => {
       await lernaBootstrap("--scope", "@test/package-@(5|6)");
       expect(writeJsonFile.sync).toBeCalled();
       expect(writeJsonFile.sync.mock.calls[0][1]).toMatchObject({
-        name: '@test/package-5',
-        version: '1.0.0',
-        private: true
+        name: "@test/package-5",
+        version: "1.0.0",
+        private: true,
       });
       expect(installedPackagesInDirectories(testDir)).toMatchSnapshot();
       expect(symlinkedDirectories(testDir)).toMatchSnapshot();

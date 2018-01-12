@@ -221,14 +221,15 @@ export default class PublishCommand extends Command {
 
     this.packagesToPublish = this.updates.map(update => update.package).filter(pkg => !pkg.isPrivate());
 
-    this.packagesToPublish.forEach((pkg) => {
+    this.packagesToPublish.forEach(pkg => {
       const publishDirectoryPackage = pkg.getPublishDirectoryPackage();
       if (publishDirectoryPackage) {
         if (pkg.name !== publishDirectoryPackage.name || pkg.version !== publishDirectoryPackage.version) {
-          const message = "Package " + pkg.name + " version is " + pkg.name + "@" + pkg.version + " "
-            + "doesn't match version of the custom publish 'package.json' file "
-            + pkg.publishDirectoryPackage.name + " version is " + pkg.publishDirectoryPackage.name
-            + "@" + pkg.version;
+          const message =
+            `Package ${pkg.name} version is ${pkg.name}@${pkg.version} ` +
+            `doesn't match version of the custom publish 'package.json' file ${
+              pkg.publishDirectoryPackage.name
+            } version is ${pkg.publishDirectoryPackage.name}@${pkg.version}`;
           this.logger.error(message);
           throw new Error(message);
         }
