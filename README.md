@@ -173,7 +173,7 @@ It will configure `lerna.json` to enforce exact match for all subsequent executi
 ```json
 {
   "lerna": "2.0.0",
-  "command": {
+  "commands": {
     "init": {
       "exact": true
     }
@@ -229,7 +229,7 @@ Let's use `babel` as an example.
 $ lerna add <package>[@version] [--dev]
 ```
 
-Add local or remote `package` as dependency to packages in in the current Lerna repo.
+Add local or remote `package` as dependency to packages in the current Lerna repo.
 
 When run, this command will:
 
@@ -313,7 +313,7 @@ More specifically, this command will:
 
 > Lerna won't publish packages which are marked as private (`"private": true` in the `package.json`).
 
-**Note:** to publish scoped packages, you need to add the following to each packages `package.json`:
+**Note:** to publish scoped packages, you need to add the following to each `package.json`:
 
 ```js
 "publishConfig": {
@@ -494,7 +494,7 @@ Note that this only applies when using the default "fixed" versioning mode, as t
 This can be configured in lerna.json, as well:
 ```json
 {
-  "command": {
+  "commands": {
     "publish": {
       "message": "chore(release): publish %s"
     }
@@ -504,15 +504,28 @@ This can be configured in lerna.json, as well:
 
 #### --allow-branch [glob]
 
-Lerna allows you to specify a glob in your `lerna.json` that your current branch needs to match to be publishable.
+Lerna allows you to specify a glob or an array of globs in your `lerna.json` that your current branch needs to match to be publishable.
 You can use this flag to override this setting.
 If your `lerna.json` contains something like this:
 
 ```json
 {
-  "command": {
+  "commands": {
     "publish": {
       "allowBranch": "master"
+    }
+  }
+}
+```
+
+```json
+{
+  "command": {
+    "publish": {
+      "allowBranch": [
+        "master",
+        "feature/*"
+      ]
     }
   }
 }
@@ -793,7 +806,7 @@ Example:
   "lerna": "x.x.x",
   "version": "1.2.0",
   "exampleOption": "foo",
-  "command": {
+  "commands": {
     "init": {
       "exampleOption": "bar",
     }

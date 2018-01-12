@@ -19,21 +19,16 @@ const CHANGELOG_CLI = require.resolve("conventional-changelog-cli/cli");
 
 export default class ConventionalCommitUtilities {
   static recommendIndependentVersion(pkg, opts) {
-    const args = [
-      RECOMMEND_CLI,
-      "-l", pkg.name,
-      "--commit-path", pkg.location,
-      "-p", ConventionalCommitUtilities.changelogPreset(opts),
-    ];
+    // `-p` here is overridden because `conventional-recommended-bump`
+    // cannot accept custom preset.
+    const args = [RECOMMEND_CLI, "-l", pkg.name, "--commit-path", pkg.location, "-p", "angular"];
     return ConventionalCommitUtilities.recommendVersion(pkg, opts, "recommendIndependentVersion", args);
   }
 
   static recommendFixedVersion(pkg, opts) {
-    const args = [
-      RECOMMEND_CLI,
-      "--commit-path", pkg.location,
-      "-p", ConventionalCommitUtilities.changelogPreset(opts),
-    ];
+    // `-p` here is overridden because `conventional-recommended-bump`
+    // cannot accept custom preset.
+    const args = [RECOMMEND_CLI, "--commit-path", pkg.location, "-p", "angular"];
     return ConventionalCommitUtilities.recommendVersion(pkg, opts, "recommendFixedVersion", args);
   }
 
@@ -50,10 +45,14 @@ export default class ConventionalCommitUtilities {
     const pkgJsonLocation = path.join(pkg.location, "package.json");
     const args = [
       CHANGELOG_CLI,
-      "-l", pkg.name,
-      "--commit-path", pkg.location,
-      "--pkg", pkgJsonLocation,
-      "-p", ConventionalCommitUtilities.changelogPreset(opts),
+      "-l",
+      pkg.name,
+      "--commit-path",
+      pkg.location,
+      "--pkg",
+      pkgJsonLocation,
+      "-p",
+      ConventionalCommitUtilities.changelogPreset(opts),
     ];
     ConventionalCommitUtilities.updateChangelog(pkg, opts, "updateIndependentChangelog", args);
   }
@@ -62,9 +61,12 @@ export default class ConventionalCommitUtilities {
     const pkgJsonLocation = path.join(pkg.location, "package.json");
     const args = [
       CHANGELOG_CLI,
-      "--commit-path", pkg.location,
-      "--pkg", pkgJsonLocation,
-      "-p", ConventionalCommitUtilities.changelogPreset(opts),
+      "--commit-path",
+      pkg.location,
+      "--pkg",
+      pkgJsonLocation,
+      "-p",
+      ConventionalCommitUtilities.changelogPreset(opts),
     ];
     ConventionalCommitUtilities.updateChangelog(pkg, opts, "updateFixedChangelog", args);
   }
@@ -72,8 +74,10 @@ export default class ConventionalCommitUtilities {
   static updateFixedRootChangelog(pkg, opts) {
     const args = [
       CHANGELOG_CLI,
-      "-p", ConventionalCommitUtilities.changelogPreset(opts),
-      "--context", path.resolve(__dirname, "..", "lib", "ConventionalChangelogContext.js"),
+      "-p",
+      ConventionalCommitUtilities.changelogPreset(opts),
+      "--context",
+      path.resolve(__dirname, "..", "lib", "ConventionalChangelogContext.js"),
     ];
     ConventionalCommitUtilities.updateChangelog(pkg, opts, "updateFixedRootChangelog", args);
   }
@@ -93,13 +97,14 @@ export default class ConventionalCommitUtilities {
 
     // When force publishing, it is possible that there will be no actual changes, only a version bump.
     // Add a note to indicate that only a version bump has occurred.
-    if (!newEntry.split("\n").some((line) => line.startsWith("*"))) {
+    if (!newEntry.split("\n").some(line => line.startsWith("*"))) {
       newEntry = dedent(
         `
         ${newEntry}
         
         **Note:** Version bump only for package ${pkg.name} 
-        `);
+        `,
+      );
     }
 
     log.silly(type, "writing new entry: %j", newEntry);
@@ -107,8 +112,7 @@ export default class ConventionalCommitUtilities {
     // CHANGELOG entries start with <a name=, we remove
     // the header if it exists by starting at the first entry.
     if (changelogContents.indexOf("<a name=") !== -1) {
-      changelogContents = changelogContents.substring(changelogContents.indexOf("<a name=")
-      );
+      changelogContents = changelogContents.substring(changelogContents.indexOf("<a name="));
     }
 
     FileSystemUtilities.writeFileSync(
@@ -119,7 +123,8 @@ export default class ConventionalCommitUtilities {
 
         ${newEntry}
 
-        ${changelogContents}`.replace(/\n+$/, "\n"))
+        ${changelogContents}`.replace(/\n+$/, "\n"),
+      ),
     );
 
     log.verbose(type, "wrote", changelogLocation);
