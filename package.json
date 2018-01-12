@@ -1,5 +1,5 @@
 {
-  "name": "lerna",
+  "name": "@essent/lerna",
   "version": "2.7.0",
   "description": "Tool for managing JavaScript projects with multiple packages",
   "main": "lib/index.js",
@@ -23,12 +23,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lerna/lerna.git"
+    "url": "git+https://github.com/essent/lerna.git"
   },
   "author": "Sebastian McKenzie <sebmck@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lerna/lerna/issues"
+    "url": "https://github.com/essent/lerna/issues"
   },
   "homepage": "https://lernajs.io/",
   "dependencies": {
@@ -116,5 +116,8 @@
   },
   "engines": {
     "node": ">= 4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
